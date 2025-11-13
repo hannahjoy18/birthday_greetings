@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .envelope {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.8s ease;
+        }
+
+        .envelope:hover {
+            transform: scale(1.05);
+        }
+
+        .envelope.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .envelope-base {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #f4f4f4;
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .envelope-flap {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-top: 100px solid #4a90e2;
+            top: 0;
+            left: 0;
+            transform-origin: top;
+            transition: transform 0.6s ease;
+            z-index: 3;
+        }
+
+        .envelope-back {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-bottom: 100px solid #357abd;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .card {
+            position: fixed;
+            width: 320px;
+            max-height: 80vh;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 1000;
+            padding: 100px;
+            text-align: center;
+            opacity: 0;
+            overflow-y: auto;
+            transition: all 0.6s ease;
+        }
+
+        .card.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .card h1 {
+            color: #2a5298;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .card p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .photo-container {
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .photo {
+            width: 250px;
+            height: 250px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 3px solid #4a90e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .heart {
+            color: #4a90e2;
+            font-size: 24px;
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .instruction.hidden {
+            opacity: 0;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti"></canvas>
+    
+    <div class="container">
+        <div class="envelope" id="envelope">
+            <div class="envelope-base"></div>
+            <div class="envelope-flap"></div>
+            <div class="envelope-back"></div>
+        </div>
+    </div>
+
+    <div class="card" id="card">
+        <h1>Happy Birthday</h1>
+        <p style="font-size: 18px; font-weight: bold; margin: 20px 0;">Mahal!</p>
+        
+        <div class="photo-container">
+            <div class="photo">
+                <img src="hdhd.jpeg" alt="Memory 1" onerror="this.parentElement.innerHTML='Add your photo here'">
+            </div>
+            <div class="photo">
+                <img src="hshs.jpeg" alt="Memory 2" onerror="this.parentElement.innerHTML='Add your photo here'">
+            </div>
+        </div>
+        
+        <p style="font-size: 18px; margin-top: 20px;">I love you always.</p>
+        <div class="heart">♥</div>
+    </div>
+
+    <div class="instruction" id="instruction">Click the envelope to open!</div>
+
+    <script>
+        const envelope = document.getElementById('envelope');
+        const card = document.getElementById('card');
+        const instruction = document.getElementById('instruction');
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let confettiPieces = [];
+        let isOpened = false;
+
+        envelope.addEventListener('click', function() {
+            if (!isOpened) {
+                isOpened = true;
+                
+                // Hide instruction
+                instruction.classList.add('hidden');
+                
+                // Fade out envelope
+                envelope.classList.add('fade-out');
+                
+                // Show card after envelope fades
+                setTimeout(() => {
+                    card.classList.add('show');
+                }, 800);
+                
+                // Start confetti
+                createConfetti();
+            }
+        });
+
+        function createConfetti() {
+            const colors = ['#d4af37', '#4a90e2', '#50c878', '#ff6347', '#ffa500', '#2a5298'];
+            const confettiCount = 150;
+
+            for (let i = 0; i < confettiCount; i++) {
+                confettiPieces.push({
+                    x: Math.random() * canvas.width,
+                    y: -10,
+                    width: Math.random() * 10 + 5,
+                    height: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: Math.random() * 3 + 2,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: Math.random() * 5 - 2.5
+                });
+            }
+
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            confettiPieces.forEach((piece, index) => {
+                ctx.save();
+                ctx.translate(piece.x, piece.y);
+                ctx.rotate(piece.rotation * Math.PI / 180);
+                ctx.fillStyle = piece.color;
+                ctx.fillRect(-piece.width / 2, -piece.height / 2, piece.width, piece.height);
+                ctx.restore();
+
+                piece.y += piece.speed;
+                piece.rotation += piece.rotationSpeed;
+                piece.x += Math.sin(piece.y / 30) * 2;
+
+                if (piece.y > canvas.height) {
+                    confettiPieces.splice(index, 1);
+                }
+            });
+
+            if (confettiPieces.length > 0) {
+                requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
