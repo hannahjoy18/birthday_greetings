@@ -21,6 +21,16 @@
             overflow: hidden;
         }
 
+        /* Hide scrollbar for all browsers */
+        * {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+
+        *::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
         .container {
             position: relative;
             perspective: 1000px;
@@ -195,7 +205,7 @@
 
     <div class="card" id="card">
         <h1>Happy Birthday</h1>
-        <p style="font-size: 18px; font-weight: bold; margin: 20px 0;">Mahal!</p>
+        <p style="font-size: 18px; font-weight: bold; margin: 20px 0;">Matmat!</p>
         
         <div class="photo-container">
             <div class="photo">
